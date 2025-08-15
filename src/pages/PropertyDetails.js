@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { db, doc, getDoc, addEvent, addBooking, trackEvent } from '../firebase';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +11,7 @@ export default function PropertyDetails(){
   const [to, setTo] = useState('');
   const [notes, setNotes] = useState('');
   const [bookingLoading, setBookingLoading] = useState(false);
+const MapView = lazy(() => import('../components/MapView'));
 
   useEffect(()=>{
     (async ()=>{
