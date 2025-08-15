@@ -1,0 +1,67 @@
+.app-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.welcome-section {
+  position: relative;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.flag-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    #007a3d 33%,  /* أخضر */
+    white 33%, white 66%,  /* أبيض */
+    #000000 66%  /* أسود */
+  );
+  animation: slideFlag 8s linear infinite;
+}
+
+.flag-background::before {
+  content: "★   ★   ★";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: red;
+  font-size: 40px;
+  letter-spacing: 40px;
+}
+
+@keyframes slideFlag {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.welcome-text {
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.welcome-text h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.welcome-text p {
+  font-size: 1.2rem;
+}
