@@ -52,3 +52,8 @@ i18n
   });
 
 export default i18n;
+try {
+  // init i18next كالمعتاد
+} catch (e) {
+  console.error('i18n init error', e);
+}
