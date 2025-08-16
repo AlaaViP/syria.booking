@@ -1,87 +1,182 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addProperty, uploadImagesAndGetURLs } from '../firebase';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import {
+  db, addDoc, collection, serverTimestamp, trackEvent, addEvent,
+} from '../firebase';
 
-const AMENITIES = ['تكييف','تدفئة','إنترنت','موقف','مصعد','مفروش'];
-const TYPES = ['شقة','منزل','استوديو','مكتب','فيلا','محل'];
+const PROVINCES = [
+  'دمشق','ريف دمشق','حلب','حمص','حماة','اللاذقية','طرطوس','درعا','السويداء','القنيطرة','إدلب','دير الزور','الرقة','الحسكة'
+];
 
-export default function AddProperty() {
-  const nav = useNavigate();
-  const { user } = useAuth();
-  const [form, setForm] = useState({
-    title: '', type: '', description: '', province: '',
-    area: '', rooms: '',
-    daily_price: '', weekly_price: '', monthly_price: '',
-    lat: '', lng: '',
-    amenities: [],
-    images: [], previews: []
-  });
-  const [saving, setSaving] = useState(false);
-  const [progress, setProgress] = useState({ step: 'idle', note: '' });
+const TYPES = ['شقة','منزل','مكتب','غرفة','استوديو','فيلا','أرض','محل'];
 
-  const setField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
-  const toggleAmenity = (name) =>
-    setForm(prev => ({ ...prev, amenities: prev.amenities.includes(name) ? prev.amenities.filter(a=>a!==name) : [...prev.amenities, name] }));
+const AMENITIES = [
+  {key:'ac', label:'تكييف'},
+  {key:'elevator', label:'مصعد'},
+  {key:'parking', label:'موقف'},
+  {key:'wifi', label:'إنترنت'},
+  {key:'furnished', label:'مفروشة'},
+];
 
-  const onImages = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    Promise.all(files.map(f => new Promise(res => { const r=new FileReader(); r.onload=()=>res({file:f,url:r.result}); r.readAsDataURL(f); })))
-      .then(list => setForm(prev => ({ ...prev, images:[...prev.images,...list.map(x=>x.file)], previews:[...prev.previews,...list.map(x=>x.url)] })));
+/** حقل نصي */
+const Field = ({ label, children, required }) => (
+  <label className="ap-field">
+    <div className="ap-label">
+      {label} {required && <span className="ap-req">*</span>}
+    </div>
+    {children}
+  </label>
+);
+
+/** شارة خيار */
+const Chip = ({ active, onClick, children }) => (
+  <button type="button" className={`ap-chip ${active ? 'is-active' : ''}`} onClick={onClick}>
+    {children}
+  </button>
+);
+
+/** مدخل روابط الصور + معاينة محلية للملفات */
+const ImagesInput = ({ urls, setUrls, files, setFiles }) => {
+  const [text, setText] = useState(urls.join(', '));
+
+  useEffect(() => setText(urls.join(', ')), [urls]);
+
+  const previews = useMemo(() => {
+    const arr = [];
+    for (const f of files) {
+      arr.push({ src: URL.createObjectURL(f), name: f.name, local: true });
+    }
+    urls.forEach(u => arr.push({ src: u, name: u }));
+    return arr;
+  }, [files, urls]);
+
+  const onPick = (e) => {
+    const list = Array.from(e.target.files || []);
+    setFiles(list.slice(0, 10)); // حد أعلى 10
   };
-  const removePreview = (i) => setForm(prev => ({ ...prev, images: prev.images.filter((_,idx)=>idx!==i), previews: prev.previews.filter((_,idx)=>idx!==i) }));
+
+  const applyUrls = () => {
+    const list = text.split(',').map(s => s.trim()).filter(Boolean);
+    setUrls(list.slice(0, 20));
+    toast.success('تم تحديث روابط الصور');
+  };
+
+  return (
+    <div className="ap-images">
+      <div className="ap-images-row">
+        <input type="file" accept="image/*" multiple onChange={onPick} className="ap-file" />
+        <small className="ap-hint">
+          يمكنك اختيار صور من جهازك (للمعاينة فقط) + إضافة روابط صور جاهزة. الرفع إلى التخزين غير مفعّل حاليًا.
+        </small>
+      </div>
+
+      <div className="ap-images-row">
+        <textarea
+          className="input ap-urlbox"
+          rows={3}
+          placeholder="ألصق روابط صور مفصولة بفاصلة ,"
+          value={text}
+          onChange={(e)=>setText(e.target.value)}
+        />
+        <button type="button" className="btn ap-apply" onClick={applyUrls}>تطبيق الروابط</button>
+      </div>
+
+      {previews.length > 0 && (
+        <div className="ap-grid">
+          {previews.map((p, i)=>(
+            <div key={i} className="ap-thumb">
+              <img src={p.src} alt={p.name} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function AddProperty(){
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [title, setTitle] = useState('');
+  const [province, setProvince] = useState('');
+  const [type, setType] = useState('');
+  const [rooms, setRooms] = useState('');
+  const [area, setArea] = useState('');
+  const [address, setAddress] = useState('');
+  const [desc, setDesc] = useState('');
+  const [amen, setAmen] = useState({ ac:false, elevator:false, parking:false, wifi:false, furnished:false });
+
+  const [priceDay, setPriceDay] = useState('');
+  const [priceWeek, setPriceWeek] = useState('');
+  const [priceMonth, setPriceMonth] = useState('');
+
+  const [imageUrls, setImageUrls] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(()=>{
+    if (!user) {
+      toast('الرجاء تسجيل الدخول أولاً');
+      navigate('/login');
+    }
+  },[user, navigate]);
+
+  const toggleAmen = (k) => setAmen(prev => ({...prev, [k]: !prev[k]}));
 
   const validate = () => {
-    if (!form.title.trim()) return 'العنوان مطلوب';
-    if (!form.type) return 'اختر نوع العقار';
-    if (!form.province.trim()) return 'المحافظة مطلوبة';
-    if (!form.area || Number(form.area) <= 0) return 'المساحة غير صحيحة';
-    if (!form.daily_price && !form.weekly_price && !form.monthly_price) return 'أدخل سعرًا واحدًا على الأقل (يومي/أسبوعي/شهري)';
+    if (!title.trim()) return 'أدخل عنوانًا مناسبًا';
+    if (!province) return 'اختر المحافظة';
+    if (!type) return 'اختر نوع العقار';
+    if (!rooms) return 'أدخل عدد الغرف';
+    if (Number(rooms) < 0) return 'عدد الغرف غير صحيح';
+    if (!area) return 'أدخل المساحة';
+    if (!priceDay && !priceWeek && !priceMonth) return 'أدخل سعرًا واحدًا على الأقل (يومي/أسبوعي/شهري)';
     return null;
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!user) { alert('الرجاء تسجيل الدخول قبل إضافة عقار.'); return; }
     const err = validate();
-    if (err) return alert(err);
+    if (err) { toast.error(err); return; }
 
     try {
       setSaving(true);
-      setProgress({ step: 'upload', note: 'جاري رفع الصور…' });
 
-      // ارفع الصور (أو تخطَّ إذا لا توجد صور)
-      let imagesURLs = [];
-      if (form.images.length > 0) {
-        imagesURLs = await uploadImagesAndGetURLs(form.images, user.uid);
-      }
-
-      setProgress({ step: 'save', note: 'جاري حفظ بيانات العقار…' });
-
-      await addProperty({
-        title: form.title,
-        type: form.type,
-        description: form.description,
-        province: form.province,
-        area: Number(form.area)||0,
-        rooms: Number(form.rooms)||0,
-        daily_price: form.daily_price || null,
-        weekly_price: form.weekly_price || null,
-        monthly_price: form.monthly_price || null,
-        lat: form.lat || null,
-        lng: form.lng || null,
-        amenities: form.amenities,
-        images: imagesURLs,
+      const data = {
         ownerId: user.uid,
-      });
+        title: title.trim(),
+        province, type,
+        rooms: Number(rooms),
+        area: Number(area),
+        address: address.trim(),
+        description: desc.trim(),
+        amenities: amen,
+        prices: {
+          day: priceDay ? Number(priceDay) : null,
+          week: priceWeek ? Number(priceWeek) : null,
+          month: priceMonth ? Number(priceMonth) : null,
+        },
+        images: imageUrls,         // روابط صور جاهزة
+        createdAt: serverTimestamp(),
+        status: 'active',
+      };
 
-      alert('تم حفظ العقار على Firestore ✅');
-      nav('/dashboard');
+      // حفظ
+      const col = collection(db, 'properties');
+      const docRef = await addDoc(col, data);
+
+      // تتبع حدث
+      await addEvent({ type:'add_property', propId: docRef.id, userId: user.uid });
+      trackEvent('add_property', { propId: docRef.id });
+
+      toast.success('تم إضافة العقار بنجاح');
+      navigate(`/property/${docRef.id}`);
     } catch (e2) {
-      console.error('[AddProperty] Error:', e2);
-      alert('تعذّر الحفظ: ' + (e2?.message || 'تحقق من الصلاحيات أو الاتصال'));
-      setProgress({ step: 'error', note: e2?.message || '' });
+      console.error(e2);
+      toast.error('تعذّر حفظ العقار');
     } finally {
       setSaving(false);
     }
@@ -89,111 +184,94 @@ export default function AddProperty() {
 
   return (
     <div className="container">
-      <div className="card form">
-        <div className="form__header">
+      <form className="ap-card" onSubmit={onSubmit}>
+        <div className="ap-head">
           <h2>إضافة عقار</h2>
-          <p>املأ الحقول التالية بدقّة. يمكنك رفع صور وسيتم عرضها للمعاينة قبل الحفظ.</p>
-          {saving && (
-            <div style={{marginTop:8, fontSize:12, color:'#6b7280'}}>
-              ⏳ {progress.step === 'upload' && 'رفع الصور…'}
-              {progress.step === 'save' && 'حفظ البيانات…'}
-              {progress.step === 'error' && 'حدث خطأ — راجع السجل.'}
-              {progress.note && <span> — {progress.note}</span>}
-            </div>
-          )}
+          <p className="ap-sub">املأ الحقول التالية بدقة لتحسين ظهور إعلانك.</p>
         </div>
 
-        <form onSubmit={onSubmit}>
-          {/* الأساسيات */}
-          <div className="form__section">
-            <h3 className="section-title">المعلومات الأساسية</h3>
-            <div className="form-row">
-              <div className="field">
-                <label>عنوان الإعلان <span className="req">*</span></label>
-                <input className="input" value={form.title} onChange={e=>setField('title', e.target.value)} placeholder="مثال: شقة مفروشة - المزة" />
-              </div>
-              <div className="field">
-                <label>نوع العقار <span className="req">*</span></label>
-                <select className="select" value={form.type} onChange={e=>setField('type', e.target.value)}>
-                  <option value="">— اختر —</option>
-                  {TYPES.map(t=> <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <div className="field">
-                <label>المحافظة <span className="req">*</span></label>
-                <input className="input" value={form.province} onChange={e=>setField('province', e.target.value)} placeholder="دمشق / حلب / حمص ..." />
-              </div>
-              <div className="field">
-                <label>المساحة (م²) <span className="req">*</span></label>
-                <input className="input" type="number" min="0" value={form.area} onChange={e=>setField('area', e.target.value)} placeholder="120" />
-              </div>
-              <div className="field">
-                <label>عدد الغرف</label>
-                <input className="input" type="number" min="0" value={form.rooms} onChange={e=>setField('rooms', e.target.value)} placeholder="3" />
-              </div>
-              <div className="field field--full">
-                <label>الوصف</label>
-                <textarea className="textarea" rows={4} value={form.description} onChange={e=>setField('description', e.target.value)} placeholder="اكتب وصفًا موجزًا يوضح أهم ميزات العقار..." />
-              </div>
-            </div>
-          </div>
+        <div className="ap-grid2">
+          <Field label="العنوان" required>
+            <input className="input" value={title} onChange={e=>setTitle(e.target.value)} placeholder="مثال: شقة مفروشة - المزة" />
+          </Field>
 
-          {/* الأسعار */}
-          <div className="form__section">
-            <h3 className="section-title">الأسعار</h3>
-            <div className="form-row">
-              <div className="field"><label>سعر يومي ($)</label><input className="input" type="number" min="0" value={form.daily_price} onChange={e=>setField('daily_price', e.target.value)} /></div>
-              <div className="field"><label>سعر أسبوعي ($)</label><input className="input" type="number" min="0" value={form.weekly_price} onChange={e=>setField('weekly_price', e.target.value)} /></div>
-              <div className="field"><label>سعر شهري ($)</label><input className="input" type="number" min="0" value={form.monthly_price} onChange={e=>setField('monthly_price', e.target.value)} /></div>
-            </div>
-          </div>
+          <Field label="المحافظة" required>
+            <select className="select" value={province} onChange={e=>setProvince(e.target.value)}>
+              <option value="">اختر…</option>
+              {PROVINCES.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+          </Field>
 
-          {/* الميزات */}
-          <div className="form__section">
-            <h3 className="section-title">الميزات</h3>
-            <div className="chips">
-              {AMENITIES.map(a => (
-                <button key={a} type="button" onClick={()=>toggleAmenity(a)} className={`chip ${form.amenities.includes(a) ? 'active' : ''}`}>{a}</button>
+          <Field label="نوع العقار" required>
+            <div className="ap-chips">
+              {TYPES.map(tp=>(
+                <Chip key={tp} active={type===tp} onClick={()=>setType(tp)}>{tp}</Chip>
               ))}
             </div>
-          </div>
+          </Field>
 
-          {/* الموقع */}
-          <div className="form__section">
-            <h3 className="section-title">الموقع (اختياري)</h3>
-            <div className="form-row">
-              <div className="field"><label>خط العرض (lat)</label><input className="input" value={form.lat} onChange={e=>setField('lat', e.target.value)} placeholder="33.5138" /></div>
-              <div className="field"><label>خط الطول (lng)</label><input className="input" value={form.lng} onChange={e=>setField('lng', e.target.value)} placeholder="36.2765" /></div>
+          <Field label="عدد الغرف" required>
+            <input className="input" type="number" min="0" value={rooms} onChange={e=>setRooms(e.target.value)} placeholder="مثال: 2" />
+          </Field>
+
+          <Field label="المساحة (م²)" required>
+            <input className="input" type="number" min="0" value={area} onChange={e=>setArea(e.target.value)} placeholder="مثال: 120" />
+          </Field>
+
+          <Field label="العنوان التفصيلي">
+            <input className="input" value={address} onChange={e=>setAddress(e.target.value)} placeholder="مثال: المزة – فيلات شرقية" />
+          </Field>
+
+          <Field label="وصف العقار">
+            <textarea className="input" rows={4} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="اكتب وصفًا مختصرًا عن العقار والمزايا القريبة…" />
+          </Field>
+        </div>
+
+        <Field label="المزايا">
+          <div className="ap-chips">
+            {AMENITIES.map(a=>(
+              <Chip key={a.key} active={amen[a.key]} onClick={()=>toggleAmen(a.key)}>{a.label}</Chip>
+            ))}
+          </div>
+        </Field>
+
+        <div className="ap-prices">
+          <Field label="سعر يومي">
+            <div className="ap-pricebox">
+              <input className="input" type="number" min="0" value={priceDay} onChange={e=>setPriceDay(e.target.value)} placeholder="مثال: 25" />
+              <span className="ap-unit">$ / يوم</span>
             </div>
-          </div>
+          </Field>
 
-          {/* الصور */}
-          <div className="form__section">
-            <h3 className="section-title">صور العقار</h3>
-            <div className="uploader">
-              <input id="images" type="file" accept="image/*" multiple onChange={onImages} />
-              <label htmlFor="images" className="btn btn-primary">{saving ? 'جاري الرفع…' : 'اختر الصور'}</label>
-              <button type="button" className="btn btn-outline" onClick={()=>setForm(prev=>({...prev, images:[], previews:[]}))} disabled={saving}>مسح الصور</button>
-              <span className="hint">يمكنك الحفظ بدون صور للتجربة.</span>
+          <Field label="سعر أسبوعي">
+            <div className="ap-pricebox">
+              <input className="input" type="number" min="0" value={priceWeek} onChange={e=>setPriceWeek(e.target.value)} placeholder="مثال: 120" />
+              <span className="ap-unit">$ / أسبوع</span>
             </div>
-            {form.previews.length > 0 && (
-              <div className="preview-grid">
-                {form.previews.map((src, i)=>(
-                  <div key={i} className="preview">
-                    <img src={src} alt={`preview-${i}`} />
-                    <button type="button" className="preview__remove" onClick={()=>removePreview(i)}>✕</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          </Field>
 
-          <div className="form__actions">
-            <button type="button" className="btn btn-outline" onClick={()=>nav(-1)} disabled={saving}>إلغاء</button>
-            <button type="submit" className="btn btn-save" disabled={saving}>{saving ? 'يحفظ…' : 'حفظ العقار'}</button>
-          </div>
-        </form>
-      </div>
+          <Field label="سعر شهري">
+            <div className="ap-pricebox">
+              <input className="input" type="number" min="0" value={priceMonth} onChange={e=>setPriceMonth(e.target.value)} placeholder="مثال: 450" />
+              <span className="ap-unit">$ / شهر</span>
+            </div>
+          </Field>
+        </div>
+
+        <Field label="الصور">
+          <ImagesInput
+            urls={imageUrls} setUrls={setImageUrls}
+            files={imageFiles} setFiles={setImageFiles}
+          />
+        </Field>
+
+        <div className="ap-actions">
+          <button type="button" className="btn ap-cancel" onClick={()=>navigate(-1)}>إلغاء</button>
+          <button type="submit" className="btn btn-primary ap-submit" disabled={saving}>
+            {saving ? 'يحفظ…' : 'نشر العقار'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
