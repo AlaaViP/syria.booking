@@ -45,3 +45,5 @@ root.render(
     </Suspense>
   </>
 );
+import { register as registerSW } from './serviceWorkerRegistration';
+registerSW();
