@@ -4,6 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "rewrites": [
+    { "source": "/(icons/.*|favicon\\.ico|manifest\\.json|logo192\\.png|logo512\\.png|static/.*)", "destination": "/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
