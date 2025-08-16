@@ -4,16 +4,16 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import './i18n'; // إذا لا تستخدم i18n احذف هذا السطر
 
-// تحميل التطبيق Lazy
 const App = lazy(() => import('./App'));
 
-// صندوق أخطاء بسيط يظهر نص الخطأ بدل شاشة بيضاء
+// صندوق أخطاء يظهر بدلاً من شاشة بيضاء
 function showFatal(msg) {
   const el = document.getElementById('fatal-error-box');
   if (!el) return;
   el.style.display = 'block';
   el.textContent = `⚠ ${msg}`;
 }
+
 window.addEventListener('error', (e) => showFatal(e.message || e.type));
 window.addEventListener('unhandledrejection', (e) =>
   showFatal(e.reason?.message || 'Unhandled rejection')
