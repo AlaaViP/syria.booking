@@ -5,6 +5,8 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import HeroFlag from './components/HeroFlag';
 import './index.css';
+import { initPush } from './push';
+
 
 const Home = lazy(()=>import('./pages/Home'));
 const Login = lazy(()=>import('./pages/Login'));
@@ -12,6 +14,8 @@ const Register = lazy(()=>import('./pages/Register'));
 const AddProperty = lazy(()=>import('./pages/AddProperty'));
 const Dashboard = lazy(()=>import('./pages/Dashboard'));
 const PropertyDetails = lazy(()=>import('./pages/PropertyDetails'));
+const VAPID_PUBLIC = 'BLeUtsomd2-ovPlVTK0jjR7Key3UE0X82ydcRkcx0Volh6-1GT4vW3W-5Xox_niGeoVTBOvYBRSIAr4hvLc7LqA	';
+
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -48,3 +52,4 @@ export default function App(){
     </AuthProvider>
   );
 }
+console.log('FCM token:', token);

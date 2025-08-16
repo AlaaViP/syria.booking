@@ -26,3 +26,21 @@ export default function Header() {
     </header>
   );
 }
+<div className="topbar">
+  <div className="topbar-inner">
+    <div className="brand">Syria Golden Eagle</div>
+    <select className="lang-select" value={i18n.language} onChange={e => i18n.changeLanguage(e.target.value)}>
+      <option value="ar">ع</option>
+      <option value="en">EN</option>
+      <option value="tr">TR</option>
+      <option value="de">DE</option>
+    </select>
+  </div>
+
+  <div className="top-actions">
+    <button className="btn" onClick={()=>navigate('/dashboard')}>{t('dashboard')}</button>
+    <button className="btn" onClick={()=>navigate('/add')}>{t('add_property')}</button>
+    <button className="btn" onClick={()=>navigate('/login')}>{t('login')}</button>
+    <button className="btn" onClick={()=>navigate('/register')}>{t('register')}</button>
+  </div>
+</div>

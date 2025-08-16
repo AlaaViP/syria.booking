@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Syria Golden Eagle</string>
+    <string name="title_activity_main">Syria Golden Eagle</string>
+    <string name="package_name">sge.app</string>
+    <string name="custom_url_scheme">sge.app</string>
+</resources>

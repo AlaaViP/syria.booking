@@ -1,0 +1,27 @@
+{
+  "packageId": "app.syria.golden.eagle",
+  "host": "syria-booking.vercel.app",
+  "name": "Syria Golden Eagle",
+  "launcherName": "SGE",
+  "themeColor": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#000000",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://syria-booking.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://syria-booking.vercel.app/icons/icon-512.png",
+  "display": "standalone",
+  "orientation": "portrait",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "signingKey": {
+    "path": "signing-key.jks",
+    "alias": "sge-key"
+  },
+  "generatorApp": "bubblewrap-cli",
+  "monochromeIconUrl": "https://syria-booking.vercel.app/icons/icon-192.png"
+}
