@@ -67,9 +67,12 @@ export default function HeroFlag({ compact = true }) {
       <div className="hero__veil"></div>
 
       <div className="hero__content">
-        <h1>{t('welcome_title')}</h1>
-        <p>{t('welcome_desc')}</p>
-      </div>
+  <h1>
+    {t('welcome_title').replace('Syria Golden Eagle', '')}
+    <span className="nowrap">Syria Golden Eagle</span>
+  </h1>
+  <p>{t('welcome_desc')}</p>
+</div>
     </section>
   );
 }

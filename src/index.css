@@ -416,3 +416,65 @@ body {
 @supports (padding: max(0px)){
   .hero { margin: 12px 0; }
 }
+/* مساحة آمنة للحواف على الآيفون */
+body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+/* ===== هيدر مبسّط للجوال ===== */
+.topbar { position: sticky; top: 0; z-index: 50; background:#000; color:#fff; }
+.topbar-inner { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; gap:10px; }
+
+/* شريط أزرار علوي قابل للتمرير أفقياً */
+.top-actions {
+  display:flex; gap:8px; overflow-x:auto; padding:6px 4px 2px;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.top-actions::-webkit-scrollbar { display:none; }
+.top-actions .btn {
+  background:#111; color:#fff; border-color:#222; padding:10px 12px; border-radius:12px; white-space:nowrap;
+}
+
+/* زر اللغة = قائمة منسدلة واحدة بدل 4 أزرار */
+.lang-select {
+  appearance: none; background:#111; color:#fff; border:1px solid #222; border-radius:10px;
+  padding:8px 12px; font-weight:600;
+}
+
+/* ===== Hero / البانر ===== */
+.hero{ position:relative; width:100%; height:220px; overflow:hidden; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.08); margin:12px 0 16px; }
+.hero--compact{ height:170px; }
+.hero__flag{ width:100%; height:100%; display:block; }
+.hero__veil{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.10)); }
+.hero__content{ position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:0 14px; }
+.hero__content h1{
+  margin:0 0 6px; color:#111; font-weight:900; letter-spacing:.2px; line-height:1.2; font-size:22px;
+}
+.hero__content h1 .nowrap{ white-space:nowrap; } /* حتى ما تنقسم Syria Golden Eagle لسطرين */
+.hero__content p{ margin:0; color:#374151; font-size:13px; }
+
+@media (min-width: 480px){
+  .hero{ height:260px; } .hero--compact{ height:200px; }
+  .hero__content h1{ font-size:26px; } .hero__content p{ font-size:14px; }
+}
+
+/* ===== فلاتر البحث للجوال ===== */
+.filters{ background:#fff; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.06); padding:12px; margin:12px 0; }
+.filters .row{ display:grid; grid-template-columns: 1.2fr .8fr .8fr .6fr .6fr; gap:8px; }
+@media (max-width: 900px){ .filters .row{ grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px){ .filters .row{ grid-template-columns: 1fr; } }
+.input, .select{ width:100%; padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#fff; }
+
+/* ===== بطاقات العقارات ===== */
+.grid-cards{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
+@media (max-width: 900px){ .grid-cards{ grid-template-columns: 1fr; } }
+
+.property-card { background:#fff; border-radius:14px; overflow:hidden; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
+.property-card .media{ aspect-ratio: 16 / 9; background:#f3f4f6; }
+.property-card img{ width:100%; height:100%; object-fit:cover; display:block; }
+.property-card .body{ padding:10px 12px; }
+.property-card .title{ font-weight:800; margin:4px 0; font-size:15px; }
+.property-card .meta{ color:#6b7280; font-size:12px; display:flex; gap:10px; flex-wrap:wrap; }
+.property-card .btn-view{ width:100%; background:#166534; color:#fff; border:none; padding:10px; border-radius:10px; margin-top:8px; }
+
+/* ===== Bottom bar (لو عندك) ===== */
+.bottom-nav { position: sticky; bottom: 0; z-index:40; background:#000; color:#fff; padding-bottom: env(safe-area-inset-bottom); }
+.bottom-nav .items { display:flex; justify-content:space-around; padding:8px 0; }
