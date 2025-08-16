@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.sge.booking",
+      "sha256_cert_fingerprints": [
+        "ضع_بصمة_SHA256_هنا_كما_ظهرت_من_keytool"
+      ]
+    }
+  }
+]
