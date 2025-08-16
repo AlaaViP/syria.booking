@@ -49,7 +49,7 @@ export default function HeroFlag({ compact = true }) {
           {/* 3 نجوم حمراء: يسار - وسط - يمين */}
           <g fill="#ce1126" transform="translate(0,7)">
             {[
-              { cx: 40,  cy: 100 },   // يسار (مع هامش حتى لا تقترب من الحافة)
+              { cx: 40,  cy: 100 },   // يسار
               { cx: 150, cy: 100 },   // وسط
               { cx: 260, cy: 100 }    // يمين
             ].map((s, i) => (
@@ -63,7 +63,7 @@ export default function HeroFlag({ compact = true }) {
         </g>
       </svg>
 
-      {/* غشاء خفيف جداً لقراءة النص وبقاء ألوان العلم واضحة */}
+      {/* غشاء خفيف للقراءة */}
       <div className="hero__veil"></div>
 
       <div className="hero__content">

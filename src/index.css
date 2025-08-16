@@ -243,3 +243,176 @@ button { font-family: inherit; }
 .notif li { margin: 6px 0; }
 .table-filters { display:flex; gap:10px; align-items:center; }
 .table-filters .input { max-width: 260px; }
+/* أساسيات عامة للجوال */
+html, body {
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  margin: 0;
+  background: #f6f7f9;
+  color: #111827;
+  padding-top: env(safe-area-inset-top);
+}
+.container { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+/* اجعل التخطيط عمودياً على الشاشات الصغيرة */
+.layout-grid { display: grid; grid-template-columns: 1fr 260px; min-height: 100vh; }
+@media (max-width: 1024px){ .layout-grid { grid-template-columns: 1fr; } }
+
+/* هيدر أسود ثابت */
+.topbar { position: sticky; top: 0; z-index: 40; background:#000; color:#fff; }
+.topbar-inner { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; gap:8px; }
+.brand { font-weight:800; color:#fff; text-decoration:none; }
+
+/* أزرار عامة */
+.btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 12px; border-radius:10px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:600; }
+.btn:disabled{ opacity:.6; cursor:not-allowed; }
+.btn-primary{ background:#166534; color:#fff; border-color:#166534; }
+.btn-outline{ background:transparent; color:#fff; border-color:#fff; }
+
+/* بطاقات */
+.card{ background:#fff; border-radius:16px; box-shadow: 0 8px 24px rgba(0,0,0,.06); margin: 8px 0; }
+
+/* شبكات بطاقات العقارات */
+.grid-cards{ display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:12px; }
+@media (max-width: 900px){ .grid-cards{ grid-template-columns: 1fr; } }
+.property-card img{ width:100%; height:180px; object-fit:cover; display:block; }
+@media (max-width: 480px){ .property-card img{ height:150px; } }
+@media (max-width: 640px){
+  .form-grid { display: grid; grid-template-columns: 1fr !important; gap: 10px; }
+}
+
+/* فلاتر البحث */
+.filters{ background:#fff; border-radius:16px; box-shadow: 0 8px 24px rgba(0,0,0,.06); padding:12px; margin:12px 0; }
+.filters .row{ display:grid; grid-template-columns: 1.2fr .8fr .8fr .6fr .6fr; gap:8px; }
+@media (max-width: 900px){ .filters .row{ grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px){ .filters .row{ grid-template-columns: 1fr; } }
+.input, .select{ width:100%; padding:11px 12px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; outline:none; }
+
+/* ====== العلم السوري: ألوان كاملة + حركة خفيفة ====== */
+.hero-flag{
+  position:relative; height:220px; border-radius:24px; overflow:hidden; margin:16px 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+.hero-flag.compact{ height:160px; }
+
+/* الخلفية: ثلاث شرائط كاملة (أخضر/أبيض/أسود) مع حركة بطيئة */
+.flag-sy{
+  background:
+    linear-gradient(180deg,
+      #0b7a3b 0%,
+      #0b7a3b 33.333%,
+      #ffffff 33.333%,
+      #ffffff 66.666%,
+      #000000 66.666%,
+      #000000 100%);
+  animation: slowPan 12s ease-in-out infinite;
+  background-size: 102% 100%;
+}
+@keyframes slowPan{
+  0%   { background-position: 0% 0; }
+  50%  { background-position: 2% 0; }
+  100% { background-position: 0% 0; }
+}
+
+/* نجوم حمراء في الشريط الأبيض */
+.flag-stars{ position:absolute; inset:0; }
+.star{
+  position:absolute; top:50%;
+  width:28px; height:28px;
+  background:#d31223;
+  transform:translate(-50%,-50%) rotate(18deg);
+  clip-path: polygon(50% 0%, 61% 38%, 100% 38%, 68% 60%, 79% 100%, 50% 77%, 21% 100%, 32% 60%, 0% 38%, 39% 38%);
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.12));
+  animation: starSway 6s ease-in-out infinite;
+}
+@keyframes starSway{
+  0%   { transform:translate(-50%,-50%) rotate(18deg); }
+  50%  { transform:translate(-50%,-52%) rotate(18deg); }
+  100% { transform:translate(-50%,-50%) rotate(18deg); }
+}
+@media (max-width: 640px){
+  .star{ width:22px; height:22px; }
+}
+
+/* طبقة نص فوق العلم بتغبيش خفيف حتى تبقى الألوان واضحة */
+.overlay-hero{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.2)); }
+.hero-content{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 12px; }
+.hero-content h1{ margin:0 0 6px; color:#111; font-size:26px; font-weight:800; }
+.hero-content p{ margin:0; color:#374151; font-size:14px; }
+@media (max-width: 480px){
+  .hero-content h1{ font-size:22px; }
+  .hero-content p{ font-size:13px; }
+}
+
+/* على الجوال: الأزرار تملى العرض */
+@media (max-width: 480px){
+  .btn, .btn-primary, .btn-outline { width:100%; }
+}
+/* ===== HeroFlag (Responsive, Full-bleed) ===== */
+.hero{
+  position: relative;
+  width: 100%;
+  height: 300px;              /* ارتفاع مريح للديسكتوب */
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  margin: 12px 0 16px;
+}
+.hero--compact{ height: 200px; }
+
+.hero__flag{
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* غشاء خفيف لتحسين قراءة النص فوق ألوان العلم */
+.hero__veil{
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,.10));
+  pointer-events: none;
+}
+
+/* نص الترحيب */
+.hero__content{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 16px;
+}
+.hero__content h1{
+  margin: 0 0 6px;
+  font-weight: 800;
+  color: #111;
+  font-size: 28px;
+  letter-spacing: .2px;
+}
+.hero__content p{
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+}
+
+/* ===== Mobile tweaks ===== */
+@media (max-width: 768px){
+  .hero{ height: 240px; border-radius: 16px; }
+  .hero--compact{ height: 180px; }
+  .hero__content h1{ font-size: 22px; }
+  .hero__content p{ font-size: 13px; }
+}
+
+@media (max-width: 480px){
+  .hero{ height: 200px; }
+  .hero--compact{ height: 160px; }
+  .hero__content h1{ font-size: 20px; }
+  .hero__content p{ font-size: 12px; }
+}
+
+/* إزالة أي تباعد خارجي يضغط البانر على الجوال داخل حاويات ضيقة */
+@supports (padding: max(0px)){
+  .hero { margin: 12px 0; }
+}
