@@ -1,12 +1,14 @@
 // src/index.js
 import React, { lazy, Suspense } from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 import './index.css';
-import './i18n'; // إذا لا تستخدم i18n احذف هذا السطر
+import './i18n'; // أبقه مبكرًا
+import { registerSW } from './serviceWorkerRegistration';
 
-const App = lazy(() => import('./App'));
+// حمّل App بطريقة lazy وتجنّب اسم متكرر
+const AppLazy = lazy(() => import('./App'));
 
-// صندوق أخطاء يظهر بدلاً من شاشة بيضاء
+// صندوق أخطاء يظهر بدل الشاشة البيضاء
 function showFatal(msg) {
   const el = document.getElementById('fatal-error-box');
   if (!el) return;
@@ -19,8 +21,7 @@ window.addEventListener('unhandledrejection', (e) =>
   showFatal(e.reason?.message || 'Unhandled rejection')
 );
 
-const rootEl = document.getElementById('root');
-const root = createRoot(rootEl);
+const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <>
@@ -41,9 +42,10 @@ root.render(
       }}
     />
     <Suspense fallback={<div style={{ padding: 16, textAlign: 'center' }}>جارِ التحميل…</div>}>
-      <App />
+      <AppLazy />
     </Suspense>
   </>
 );
-import { register as registerSW } from './serviceWorkerRegistration';
+
+// تسجيل Service Worker (للإنتاج فقط)
 registerSW();

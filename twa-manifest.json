@@ -3,7 +3,9 @@
   "host": "syria-booking.vercel.app",
   "name": "Syria Golden Eagle",
   "launcherName": "SGE",
+  "display": "standalone",
   "themeColor": "#000000",
+  "themeColorDark": "#000000",
   "navigationColor": "#000000",
   "navigationColorDark": "#000000",
   "navigationDividerColor": "#000000",
@@ -11,17 +13,29 @@
   "backgroundColor": "#000000",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://syria-booking.vercel.app/icons/icon-512.png",
-  "maskableIconUrl": "https://syria-booking.vercel.app/icons/icon-512.png",
-  "display": "standalone",
-  "orientation": "portrait",
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
-  "shortcuts": [],
+  "iconUrl": "https://syria-booking.vercel.app/logo512.png",
+  "maskableIconUrl": "https://syria-booking.vercel.app/logo512.png",
+  "monochromeIconUrl": "https://syria-booking.vercel.app/logo192.png",
   "signingKey": {
-    "path": "signing-key.jks",
-    "alias": "sge-key"
+    "path": "sge-release.keystore",
+    "alias": "sge"
   },
+  "appVersionName": "bubblewrap build",
+  "appVersionCode": 2,
+  "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "monochromeIconUrl": "https://syria-booking.vercel.app/icons/icon-192.png"
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "appVersion": "bubblewrap build"
 }

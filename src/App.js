@@ -1,4 +1,5 @@
-import React, { Suspense, lazy } from 'react';
+// src/App.js
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Header from './components/Header';
@@ -7,15 +8,17 @@ import HeroFlag from './components/HeroFlag';
 import './index.css';
 import { initPush } from './push';
 
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const AddProperty = lazy(() => import('./pages/AddProperty'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 
-const Home = lazy(()=>import('./pages/Home'));
-const Login = lazy(()=>import('./pages/Login'));
-const Register = lazy(()=>import('./pages/Register'));
-const AddProperty = lazy(()=>import('./pages/AddProperty'));
-const Dashboard = lazy(()=>import('./pages/Dashboard'));
-const PropertyDetails = lazy(()=>import('./pages/PropertyDetails'));
-const VAPID_PUBLIC = 'BLeUtsomd2-ovPlVTK0jjR7Key3UE0X82ydcRkcx0Volh6-1GT4vW3W-5Xox_niGeoVTBOvYBRSIAr4hvLc7LqA	';
-
+// استخدم .env إن وُجد، وإلا استخدم المفتاح الذي زوّدتني به (بدون أي محارف زائدة)
+const FALLBACK_VAPID =
+  'BLeUtsomd2-ovPlVTK0jjR7Key3UE0X82ydcRkcx0Volh6-1GT4vW3W-5Xox_niGeoVTBOvYBRSIAr4hvLc7LqA';
+const VAPID_PUBLIC = (process.env.REACT_APP_FIREBASE_VAPID_KEY || FALLBACK_VAPID).trim();
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -23,7 +26,12 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
-export default function App(){
+export default function App() {
+  // فعّل Push مرة واحدة (اختياري: يمكنك ربطها بعد تسجيل الدخول فقط)
+  useEffect(() => {
+    initPush(VAPID_PUBLIC);
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
@@ -38,8 +46,22 @@ export default function App(){
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
-                  <Route path="/add" element={<PrivateRoute><AddProperty /></PrivateRoute>} />
-                  <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                  <Route
+                    path="/add"
+                    element={
+                      <PrivateRoute>
+                        <AddProperty />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    }
+                  />
                   <Route path="/property/:id" element={<PropertyDetails />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
@@ -52,4 +74,3 @@ export default function App(){
     </AuthProvider>
   );
 }
-console.log('FCM token:', token);
