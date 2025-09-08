@@ -12,7 +12,7 @@ const PROVINCES = [
 
 const TYPES = ['شقة','منزل','مكتب','غرفة','استوديو','فيلا','أرض','محل'];
 
-/* ======= المزايا الموسّعة ======= */
+/* ===== مزايا موسعة ===== */
 const AMENITIES = [
   {key:'ac', label:'تكييف'},
   {key:'elevator', label:'مصعد'},
@@ -31,30 +31,30 @@ const AMENITIES = [
   {key:'terrace', label:'تراس'},
 ];
 
-/* ===================== Geocoding (Nominatim) ===================== */
+/* =================== Geocoding (Nominatim) =================== */
+/** دمج العنوان + المحافظة + سوريا لإرساله للـ API */
 const buildFullAddress = (address, province) =>
   [address, province, 'Syria'].filter(Boolean).join(', ');
 
+/** استدعاء Nominatim لإرجاع lat/lng */
 async function geocodeAddress(q) {
+  // أضف بريدك (اختياري) لتكون صديقًا للخدمة
+  const email = 'youremail@example.com';
   const url =
-    `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&countrycodes=sy&accept-language=ar&q=${encodeURIComponent(q)}`;
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&countrycodes=sy&accept-language=ar&q=${encodeURIComponent(q)}&email=${encodeURIComponent(email)}`;
 
-  const resp = await fetch(url, {
-    headers: {
-      'Accept-Language': 'ar',
-      'User-Agent': 'SyriaGoldenEagle/1.0 (contact: youremail@example.com)',
-    },
-  });
+  const resp = await fetch(url, { headers: { 'Accept-Language': 'ar' } });
   if (!resp.ok) return null;
+
   const data = await resp.json();
   if (Array.isArray(data) && data.length) {
     return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
   }
   return null;
 }
-/* ================================================================= */
+/* ============================================================ */
 
-/** حقل نصي */
+/** حقل لابل + محتوى */
 const Field = ({ label, children, required }) => (
   <label className="ap-field">
     <div className="ap-label">
@@ -71,24 +71,21 @@ const Chip = ({ active, onClick, children }) => (
   </button>
 );
 
-/** مدخل روابط الصور + معاينة محلية للملفات */
+/** روابط/ملفات الصور + معاينة */
 const ImagesInput = ({ urls, setUrls, files, setFiles }) => {
   const [text, setText] = useState(urls.join(', '));
-
   useEffect(() => setText(urls.join(', ')), [urls]);
 
   const previews = useMemo(() => {
     const arr = [];
-    for (const f of files) {
-      arr.push({ src: URL.createObjectURL(f), name: f.name, local: true });
-    }
+    for (const f of files) arr.push({ src: URL.createObjectURL(f), name: f.name, local: true });
     urls.forEach(u => arr.push({ src: u, name: u }));
     return arr;
   }, [files, urls]);
 
   const onPick = (e) => {
     const list = Array.from(e.target.files || []);
-    setFiles(list.slice(0, 10)); // حد أعلى 10
+    setFiles(list.slice(0, 10));
   };
 
   const applyUrls = () => {
@@ -105,7 +102,6 @@ const ImagesInput = ({ urls, setUrls, files, setFiles }) => {
           يمكنك اختيار صور من جهازك (للمعاينة فقط) + إضافة روابط صور جاهزة. الرفع إلى التخزين غير مفعّل حاليًا.
         </small>
       </div>
-
       <div className="ap-images-row">
         <textarea
           className="input ap-urlbox"
@@ -116,7 +112,6 @@ const ImagesInput = ({ urls, setUrls, files, setFiles }) => {
         />
         <button type="button" className="btn ap-apply" onClick={applyUrls}>تطبيق الروابط</button>
       </div>
-
       {previews.length > 0 && (
         <div className="ap-grid">
           {previews.map((p, i)=>(
@@ -142,8 +137,11 @@ export default function AddProperty(){
   const [address, setAddress] = useState('');
   const [desc, setDesc] = useState('');
 
-  // نبني الحالة الابتدائية للمزايا من القائمة أعلاه
-  const defaultAmen = useMemo(() => AMENITIES.reduce((acc, a)=> (acc[a.key]=false, acc), {}), []);
+  // حالـة المزايا: نبني كائن بالمفاتيح كلها = false
+  const defaultAmen = useMemo(
+    () => AMENITIES.reduce((acc, a) => (acc[a.key] = false, acc), {}),
+    []
+  );
   const [amen, setAmen] = useState(defaultAmen);
 
   // الأسعار
@@ -178,7 +176,6 @@ export default function AddProperty(){
     if (!area) return 'أدخل المساحة';
     if (!address.trim()) return 'أدخل العنوان التفصيلي (الحي/الشارع)';
     if (!priceDay && !priceWeek && !priceMonth) return 'أدخل سعرًا واحدًا على الأقل (يومي/أسبوعي/شهري)';
-    // السعة اختيارية، لكن إن أدخل بالغين/قاصرين بدون الكلي، سنحسبه تلقائيًا
     return null;
   };
 
@@ -190,7 +187,7 @@ export default function AddProperty(){
     try {
       setSaving(true);
 
-      // 1) تحديد الإحداثيات
+      // (1) تجهيز نص العنوان الكامل + الجييوكودينغ
       const q = buildFullAddress(address, province);
       const coords = await geocodeAddress(q);
       if (!coords) {
@@ -199,7 +196,7 @@ export default function AddProperty(){
         return;
       }
 
-      // 2) تجهيز السعة
+      // (2) تجهيز السعة
       const adultsNum = capAdults ? Number(capAdults) : 0;
       const minorsNum = capMinors ? Number(capMinors) : 0;
       const totalNum = capTotal ? Number(capTotal) : (adultsNum + minorsNum);
@@ -209,7 +206,7 @@ export default function AddProperty(){
         minors: capMinors ? minorsNum : null,
       };
 
-      // 3) البيانات النهائية
+      // (3) البيانات النهائية
       const data = {
         ownerId: user.uid,
         title: title.trim(),
@@ -219,7 +216,7 @@ export default function AddProperty(){
         address: address.trim(),
         description: desc.trim(),
         amenities: amen,
-        capacity, // << السعة
+        capacity,
         prices: {
           day: priceDay ? Number(priceDay) : null,
           week: priceWeek ? Number(priceWeek) : null,
@@ -231,9 +228,9 @@ export default function AddProperty(){
         status: 'active',
       };
 
+      // (4) حفظ + تتبّع
       const col = collection(db, 'properties');
       const docRef = await addDoc(col, data);
-
       await addEvent({ type:'add_property', propId: docRef.id, userId: user.uid });
       trackEvent('add_property', { propId: docRef.id });
 
@@ -292,7 +289,7 @@ export default function AddProperty(){
           </Field>
         </div>
 
-        {/* ======= السعة (عدد الأشخاص) ======= */}
+        {/* السعة */}
         <div className="ap-grid3">
           <Field label="السعة الكلّية (عدد الأشخاص)">
             <input className="input" type="number" min="0" value={capTotal} onChange={e=>setCapTotal(e.target.value)} placeholder="مثال: 4" />
@@ -320,14 +317,12 @@ export default function AddProperty(){
               <span className="ap-unit">$ / يوم</span>
             </div>
           </Field>
-
           <Field label="سعر أسبوعي">
             <div className="ap-pricebox">
               <input className="input" type="number" min="0" value={priceWeek} onChange={e=>setPriceWeek(e.target.value)} placeholder="مثال: 120" />
               <span className="ap-unit">$ / أسبوع</span>
             </div>
           </Field>
-
           <Field label="سعر شهري">
             <div className="ap-pricebox">
               <input className="input" type="number" min="0" value={priceMonth} onChange={e=>setPriceMonth(e.target.value)} placeholder="مثال: 450" />
