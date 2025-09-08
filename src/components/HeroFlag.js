@@ -66,7 +66,7 @@ export default function HeroFlag({ compact = true }) {
       {/* غشاء خفيف للقراءة */}
       <div className="hero__veil"></div>
 
-      <div className="hero__content">
+      <div className="hero__content"style={{ color: '#fff' }}>
   <h1>
     {t('welcome_title').replace('Syria Golden Eagle', '')}
     <span className="nowrap">Syria Golden Eagle</span>

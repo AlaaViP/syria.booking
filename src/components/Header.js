@@ -56,3 +56,8 @@ export default function Header() {
     </header>
   );
 }
+<img 
+  src="/images/syria-revolution-flag.svg" 
+  alt="علم الثورة السورية" 
+  className="absolute top-4 right-4 h-12 shadow-md rounded"
+/>

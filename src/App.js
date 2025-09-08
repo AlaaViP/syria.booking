@@ -71,6 +71,11 @@ export default function App() {
           <Sidebar />
         </div>
       </Router>
+      <img
+  src="/eagle-gold.png"
+  alt="Golden Eagle"
+  className="fixed bottom-4 right-4 w-20 h-20 drop-shadow-lg z-50 pointer-events-none"
+/>
     </AuthProvider>
   );
 }
