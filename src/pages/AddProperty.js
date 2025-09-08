@@ -5,6 +5,13 @@ import { useAuth } from '../context/AuthContext';
 import {
   db, addDoc, collection, serverTimestamp, trackEvent, addEvent,
 } from '../firebase';
+// محافظات سوريا (تُستخدم في القائمة المنسدلة وفي fallback)
+const PROVINCES = [
+  'دمشق','ريف دمشق','حلب','حمص','حماة',
+  'اللاذقية','طرطوس','درعا','السويداء','القنيطرة',
+  'إدلب','دير الزور','الرقة','الحسكة'
+];
+
 // مراكز تقريبية لكل محافظة (fallback إذا فشل الجييوكودينغ)
 const PROVINCE_CENTERS = {
   'دمشق':        { lat: 33.5138, lng: 36.2765 },
