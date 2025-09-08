@@ -12,20 +12,29 @@ const PROVINCES = [
 
 const TYPES = ['شقة','منزل','مكتب','غرفة','استوديو','فيلا','أرض','محل'];
 
+/* ======= المزايا الموسّعة ======= */
 const AMENITIES = [
   {key:'ac', label:'تكييف'},
   {key:'elevator', label:'مصعد'},
   {key:'parking', label:'موقف'},
   {key:'wifi', label:'إنترنت'},
   {key:'furnished', label:'مفروشة'},
+  {key:'kitchen', label:'مطبخ'},
+  {key:'bathroom', label:'حمّام'},
+  {key:'balcony', label:'بلكون'},
+  {key:'pool', label:'مسبح'},
+  {key:'indoorPool', label:'مسبح داخلي'},
+  {key:'sauna', label:'ساونا'},
+  {key:'jacuzzi', label:'جاكوزي'},
+  {key:'playground', label:'ملعب'},
+  {key:'garden', label:'حديقة'},
+  {key:'terrace', label:'تراس'},
 ];
 
 /* ===================== Geocoding (Nominatim) ===================== */
-// دمج العنوان + المحافظة + سوريا لإرسالها للـ API
 const buildFullAddress = (address, province) =>
   [address, province, 'Syria'].filter(Boolean).join(', ');
 
-// استعلام Nominatim لإرجاع lat/lng
 async function geocodeAddress(q) {
   const url =
     `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&countrycodes=sy&accept-language=ar&q=${encodeURIComponent(q)}`;
@@ -33,7 +42,6 @@ async function geocodeAddress(q) {
   const resp = await fetch(url, {
     headers: {
       'Accept-Language': 'ar',
-      // يفضل وضع ايميلك هنا حسب سياسة Nominatim
       'User-Agent': 'SyriaGoldenEagle/1.0 (contact: youremail@example.com)',
     },
   });
@@ -133,11 +141,20 @@ export default function AddProperty(){
   const [area, setArea] = useState('');
   const [address, setAddress] = useState('');
   const [desc, setDesc] = useState('');
-  const [amen, setAmen] = useState({ ac:false, elevator:false, parking:false, wifi:false, furnished:false });
 
+  // نبني الحالة الابتدائية للمزايا من القائمة أعلاه
+  const defaultAmen = useMemo(() => AMENITIES.reduce((acc, a)=> (acc[a.key]=false, acc), {}), []);
+  const [amen, setAmen] = useState(defaultAmen);
+
+  // الأسعار
   const [priceDay, setPriceDay] = useState('');
   const [priceWeek, setPriceWeek] = useState('');
   const [priceMonth, setPriceMonth] = useState('');
+
+  // السعة (أشخاص)
+  const [capTotal, setCapTotal] = useState('');   // الكلي
+  const [capAdults, setCapAdults] = useState(''); // بالغون
+  const [capMinors, setCapMinors] = useState(''); // قاصرون
 
   const [imageUrls, setImageUrls] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
@@ -152,7 +169,6 @@ export default function AddProperty(){
 
   const toggleAmen = (k) => setAmen(prev => ({...prev, [k]: !prev[k]}));
 
-  // تحديث للتحقق: يطلب العنوان التفصيلي أيضاً
   const validate = () => {
     if (!title.trim()) return 'أدخل عنوانًا مناسبًا';
     if (!province) return 'اختر المحافظة';
@@ -162,6 +178,7 @@ export default function AddProperty(){
     if (!area) return 'أدخل المساحة';
     if (!address.trim()) return 'أدخل العنوان التفصيلي (الحي/الشارع)';
     if (!priceDay && !priceWeek && !priceMonth) return 'أدخل سعرًا واحدًا على الأقل (يومي/أسبوعي/شهري)';
+    // السعة اختيارية، لكن إن أدخل بالغين/قاصرين بدون الكلي، سنحسبه تلقائيًا
     return null;
   };
 
@@ -173,17 +190,26 @@ export default function AddProperty(){
     try {
       setSaving(true);
 
-      // 1) جهّز نص العنوان الكامل ثم جيّب الإحداثيات
+      // 1) تحديد الإحداثيات
       const q = buildFullAddress(address, province);
       const coords = await geocodeAddress(q);
-
       if (!coords) {
         setSaving(false);
         toast.error('تعذّر تحديد موقع العنوان تلقائيًا. عدّل العنوان أو جرّب بشكل أدق.');
         return;
       }
 
-      // 2) البيانات النهائية مع الإحداثيات
+      // 2) تجهيز السعة
+      const adultsNum = capAdults ? Number(capAdults) : 0;
+      const minorsNum = capMinors ? Number(capMinors) : 0;
+      const totalNum = capTotal ? Number(capTotal) : (adultsNum + minorsNum);
+      const capacity = {
+        total: totalNum || null,
+        adults: capAdults ? adultsNum : null,
+        minors: capMinors ? minorsNum : null,
+      };
+
+      // 3) البيانات النهائية
       const data = {
         ownerId: user.uid,
         title: title.trim(),
@@ -193,22 +219,21 @@ export default function AddProperty(){
         address: address.trim(),
         description: desc.trim(),
         amenities: amen,
+        capacity, // << السعة
         prices: {
           day: priceDay ? Number(priceDay) : null,
           week: priceWeek ? Number(priceWeek) : null,
           month: priceMonth ? Number(priceMonth) : null,
         },
-        images: imageUrls,         // روابط صور جاهزة
-        location: { lat: coords.lat, lng: coords.lng }, // << الإحداثيات هنا
+        images: imageUrls,
+        location: { lat: coords.lat, lng: coords.lng },
         createdAt: serverTimestamp(),
         status: 'active',
       };
 
-      // 3) حفظ
       const col = collection(db, 'properties');
       const docRef = await addDoc(col, data);
 
-      // تتبّع حدث
       await addEvent({ type:'add_property', propId: docRef.id, userId: user.uid });
       trackEvent('add_property', { propId: docRef.id });
 
@@ -264,6 +289,19 @@ export default function AddProperty(){
 
           <Field label="وصف العقار">
             <textarea className="input" rows={4} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="اكتب وصفًا مختصرًا عن العقار والمزايا القريبة…" />
+          </Field>
+        </div>
+
+        {/* ======= السعة (عدد الأشخاص) ======= */}
+        <div className="ap-grid3">
+          <Field label="السعة الكلّية (عدد الأشخاص)">
+            <input className="input" type="number" min="0" value={capTotal} onChange={e=>setCapTotal(e.target.value)} placeholder="مثال: 4" />
+          </Field>
+          <Field label="عدد البالغين">
+            <input className="input" type="number" min="0" value={capAdults} onChange={e=>setCapAdults(e.target.value)} placeholder="مثال: 2" />
+          </Field>
+          <Field label="عدد القاصرين">
+            <input className="input" type="number" min="0" value={capMinors} onChange={e=>setCapMinors(e.target.value)} placeholder="مثال: 2" />
           </Field>
         </div>
 
