@@ -20,6 +20,32 @@ const AMENITIES = [
   {key:'furnished', label:'مفروشة'},
 ];
 
+/* ===================== Geocoding (Nominatim) ===================== */
+// دمج العنوان + المحافظة + سوريا لإرسالها للـ API
+const buildFullAddress = (address, province) =>
+  [address, province, 'Syria'].filter(Boolean).join(', ');
+
+// استعلام Nominatim لإرجاع lat/lng
+async function geocodeAddress(q) {
+  const url =
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&countrycodes=sy&accept-language=ar&q=${encodeURIComponent(q)}`;
+
+  const resp = await fetch(url, {
+    headers: {
+      'Accept-Language': 'ar',
+      // يفضل وضع ايميلك هنا حسب سياسة Nominatim
+      'User-Agent': 'SyriaGoldenEagle/1.0 (contact: youremail@example.com)',
+    },
+  });
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  if (Array.isArray(data) && data.length) {
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  }
+  return null;
+}
+/* ================================================================= */
+
 /** حقل نصي */
 const Field = ({ label, children, required }) => (
   <label className="ap-field">
@@ -126,6 +152,7 @@ export default function AddProperty(){
 
   const toggleAmen = (k) => setAmen(prev => ({...prev, [k]: !prev[k]}));
 
+  // تحديث للتحقق: يطلب العنوان التفصيلي أيضاً
   const validate = () => {
     if (!title.trim()) return 'أدخل عنوانًا مناسبًا';
     if (!province) return 'اختر المحافظة';
@@ -133,6 +160,7 @@ export default function AddProperty(){
     if (!rooms) return 'أدخل عدد الغرف';
     if (Number(rooms) < 0) return 'عدد الغرف غير صحيح';
     if (!area) return 'أدخل المساحة';
+    if (!address.trim()) return 'أدخل العنوان التفصيلي (الحي/الشارع)';
     if (!priceDay && !priceWeek && !priceMonth) return 'أدخل سعرًا واحدًا على الأقل (يومي/أسبوعي/شهري)';
     return null;
   };
@@ -145,6 +173,17 @@ export default function AddProperty(){
     try {
       setSaving(true);
 
+      // 1) جهّز نص العنوان الكامل ثم جيّب الإحداثيات
+      const q = buildFullAddress(address, province);
+      const coords = await geocodeAddress(q);
+
+      if (!coords) {
+        setSaving(false);
+        toast.error('تعذّر تحديد موقع العنوان تلقائيًا. عدّل العنوان أو جرّب بشكل أدق.');
+        return;
+      }
+
+      // 2) البيانات النهائية مع الإحداثيات
       const data = {
         ownerId: user.uid,
         title: title.trim(),
@@ -160,15 +199,16 @@ export default function AddProperty(){
           month: priceMonth ? Number(priceMonth) : null,
         },
         images: imageUrls,         // روابط صور جاهزة
+        location: { lat: coords.lat, lng: coords.lng }, // << الإحداثيات هنا
         createdAt: serverTimestamp(),
         status: 'active',
       };
 
-      // حفظ
+      // 3) حفظ
       const col = collection(db, 'properties');
       const docRef = await addDoc(col, data);
 
-      // تتبع حدث
+      // تتبّع حدث
       await addEvent({ type:'add_property', propId: docRef.id, userId: user.uid });
       trackEvent('add_property', { propId: docRef.id });
 
@@ -184,7 +224,7 @@ export default function AddProperty(){
 
   return (
     <div className="container">
-      <form className="ap-card" onSubmit={onSubmit}>
+      <form className="ap-card" onSubmit={onSubmit} id="add-property-form">
         <div className="ap-head">
           <h2>إضافة عقار</h2>
           <p className="ap-sub">املأ الحقول التالية بدقة لتحسين ظهور إعلانك.</p>
@@ -218,7 +258,7 @@ export default function AddProperty(){
             <input className="input" type="number" min="0" value={area} onChange={e=>setArea(e.target.value)} placeholder="مثال: 120" />
           </Field>
 
-          <Field label="العنوان التفصيلي">
+          <Field label="العنوان التفصيلي" required>
             <input className="input" value={address} onChange={e=>setAddress(e.target.value)} placeholder="مثال: المزة – فيلات شرقية" />
           </Field>
 
