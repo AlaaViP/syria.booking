@@ -37,7 +37,6 @@ function formatPrice(prices = {}) {
 }
 
 function getLatLng(p) {
-  // أولوية: location.lat/lng -> lat/lng مباشر -> دمشق
   if (p?.location && typeof p.location.lat === 'number' && typeof p.location.lng === 'number') {
     return { lat: p.location.lat, lng: p.location.lng };
   }
@@ -66,7 +65,6 @@ export default function PropertyDetails() {
         if (snap.exists()) {
           setProp({ id: snap.id, ...snap.data() });
         }
-        // سجل مشاهدة
         await addEvent({ type: 'view', propId: id, userId: user?.uid || null });
         trackEvent('view_property', { propId: id });
       } catch (e) {
@@ -75,6 +73,14 @@ export default function PropertyDetails() {
     })();
     return () => { mounted = false; };
   }, [id, user]);
+
+  // ✅ Hooks يجب أن تكون قبل أي return
+  const amenList = useMemo(() => {
+    const a = prop?.amenities || {};
+    return Object.entries(a)
+      .filter(([, val]) => !!val)
+      .map(([k]) => AMENITY_LABELS[k] || k);
+  }, [prop?.amenities]);
 
   const submitBooking = async () => {
     if (!user) return alert('الرجاء تسجيل الدخول لإتمام الحجز.');
@@ -114,13 +120,6 @@ export default function PropertyDetails() {
   const images = Array.isArray(prop.images) && prop.images.length ? prop.images : [FALLBACK_IMG];
   const loc = getLatLng(prop);
 
-  const amenList = useMemo(() => {
-    const a = prop.amenities || {};
-    return Object.entries(a)
-      .filter(([, val]) => !!val)
-      .map(([k]) => AMENITY_LABELS[k] || k);
-  }, [prop.amenities]);
-
   const cap = prop.capacity || {};
   const capLine = [
     Number.isFinite(cap.total) ? `سعة: ${cap.total}` : null,
@@ -130,7 +129,6 @@ export default function PropertyDetails() {
 
   return (
     <div className="container">
-      {/* بطاقة التفاصيل */}
       <div className="card" style={{ padding: 12 }}>
         <h2 style={{ margin: 0 }}>{prop.title || 'بدون عنوان'}</h2>
 
@@ -141,20 +139,11 @@ export default function PropertyDetails() {
           {capLine ? ` • ${capLine}` : ''}
         </div>
 
-        {/* الأسعار */}
         <div style={{ marginTop: 6, fontWeight: 700 }}>{formatPrice(prop.prices)}</div>
 
-        {/* صور */}
-        <div
-          className="preview-grid"
-          style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}
-        >
+        <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {images.map((src, i) => (
-            <div
-              key={i}
-              className="preview"
-              style={{ overflow: 'hidden', borderRadius: 12, height: 140, background: '#f3f4f6' }}
-            >
+            <div key={i} style={{ overflow: 'hidden', borderRadius: 12, height: 140, background: '#f3f4f6' }}>
               <img
                 src={src}
                 alt={`img-${i}`}
@@ -165,17 +154,14 @@ export default function PropertyDetails() {
           ))}
         </div>
 
-        {/* المزايا */}
         {amenList.length > 0 && (
           <div style={{ marginTop: 10, color: '#111827' }}>
             <strong>المزايا:</strong> {amenList.join(' • ')}
           </div>
         )}
 
-        {/* الوصف */}
         {prop.description && <p style={{ marginTop: 10 }}>{prop.description}</p>}
 
-        {/* الخريطة (Lazy) */}
         <div style={{ marginTop: 12 }}>
           <Suspense fallback={<div style={{ height: 280 }} />}>
             <MapView lat={loc.lat} lng={loc.lng} zoom={12} />
@@ -183,7 +169,6 @@ export default function PropertyDetails() {
         </div>
       </div>
 
-      {/* طلب حجز */}
       <div className="card" style={{ padding: 12, marginTop: 12 }}>
         <h3 style={{ marginTop: 0 }}>طلب حجز</h3>
 
