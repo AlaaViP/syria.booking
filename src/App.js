@@ -15,11 +15,6 @@ const AddProperty = lazy(() => import('./pages/AddProperty'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const PropertyDetails = lazy(() => import('./pages/PropertyDetails'));
 
-// استخدم .env إن وُجد، وإلا استخدم المفتاح الذي زوّدتني به (بدون أي محارف زائدة)
-const FALLBACK_VAPID =
-  'BLeUtsomd2-ovPlVTK0jjR7Key3UE0X82ydcRkcx0Volh6-1GT4vW3W-5Xox_niGeoVTBOvYBRSIAr4hvLc7LqA';
-const VAPID_PUBLIC = (process.env.REACT_APP_FIREBASE_VAPID_KEY || FALLBACK_VAPID).trim();
-
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="py-10 text-center">Loading…</div>;
@@ -27,15 +22,14 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
-  // فعّل Push مرة واحدة (اختياري: يمكنك ربطها بعد تسجيل الدخول فقط)
+  // تفعيل إشعارات FCM إن وُجد المفتاح (الكود داخل push.js محمي في حال عدم وجوده)
   useEffect(() => {
-    initPush(VAPID_PUBLIC);
+    initPush();
   }, []);
 
   return (
     <AuthProvider>
       <Router>
-        {/* يسار = المحتوى | يمين = القائمة */}
         <div className="min-h-screen layout-grid">
           <div className="flex flex-col">
             <Header />
@@ -71,11 +65,13 @@ export default function App() {
           <Sidebar />
         </div>
       </Router>
+
+      {/* زخرفة ثابتة في الزاوية */}
       <img
-  src="/eagle-gold.png"
-  alt="Golden Eagle"
-  className="fixed bottom-4 right-4 w-20 h-20 drop-shadow-lg z-50 pointer-events-none"
-/>
+        src="/eagle-gold.png"
+        alt="Golden Eagle"
+        className="fixed bottom-4 right-4 w-20 h-20 drop-shadow-lg z-50 pointer-events-none"
+      />
     </AuthProvider>
   );
 }
