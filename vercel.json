@@ -10,7 +10,13 @@
     { "source": "/logo512.png", "destination": "/logo512.png" },
     { "source": "/favicon.ico", "destination": "/favicon.ico" },
     { "source": "/firebase-messaging-sw.js", "destination": "/firebase-messaging-sw.js" },
+
     { "source": "/static/(.*)", "destination": "/static/$1" },
+    { "source": "/(.*)/static/(.*)", "destination": "/static/$2" },
+
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/(.*)/assets/(.*)", "destination": "/assets/$2" },
+
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
