@@ -46,27 +46,17 @@
     "react-leaflet": "4.2.1",
     "@react-leaflet/core": "2.1.0",
     "leaflet": "1.9.4",
-    "typescript": "4.9.5"
+    "typescript": "4.9.5",
+    "ajv": "8.12.0"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "extends": ["react-app", "react-app/jest"]
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
   },
   "engines": {
-    "node": "22.x"
+    "node": "18.x"
   }
 }
