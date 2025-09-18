@@ -1,9 +1,8 @@
 {
   "version": 2,
-  "installCommand": "npm ci --legacy-peer-deps || npm install --legacy-peer-deps",
+  "installCommand": "npm install --no-audit --no-fund --legacy-peer-deps",
   "buildCommand": "npm run build",
   "outputDirectory": "build",
-
   "headers": [
     {
       "source": "/manifest.json",
@@ -11,27 +10,14 @@
         { "key": "Content-Type", "value": "application/manifest+json" },
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
     }
   ],
-
   "rewrites": [
     { "source": "/manifest.json", "destination": "/manifest.json" },
     { "source": "/favicon.ico", "destination": "/favicon.ico" },
     { "source": "/icons/(.*)", "destination": "/icons/$1" },
     { "source": "/firebase-messaging-sw.js", "destination": "/firebase-messaging-sw.js" },
-
     { "source": "/static/(.*)", "destination": "/static/$1" },
-    { "source": "/(.*)/static/(.*)", "destination": "/static/$2" },
-
-    { "source": "/assets/(.*)", "destination": "/assets/$1" },
-    { "source": "/(.*)/assets/(.*)", "destination": "/assets/$2" },
-
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
